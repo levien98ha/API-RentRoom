@@ -25,7 +25,9 @@ router.post('/admin/users', async (req, res) => {
       name: name,
       email: email,
       password: password,
-      role: role
+      role: role,
+      ex_key: 0,
+      del_flg: 0
     })
       await user.save()
       const token = await user.generateAuthToken()
@@ -44,11 +46,29 @@ router.post('/users', async (req, res) => {
         name: name,
         email: email,
         password: password,
-        role: 'enduser'
+        role: 'enduser',
+        ex_key: 0,
+        del_flg: 0
       })
       await user.save()
       const token = await user.generateAuthToken()
       res.status(201).send({ user, token })
+  } catch (error) {
+      res.status(400).send(error)
+  }
+})
+
+// update password
+router.put('/users/:id', auth, async (req, res) => {
+  // Create a new user
+  try {
+      const checkExist = await User.findById(req.params.id)
+      const { name, password } = req.body;
+      checkExist.name = name
+      checkExist.password = password
+
+      await checkExist.save()
+      res.status(200).send(checkExist)
   } catch (error) {
       res.status(400).send(error)
   }

@@ -63,7 +63,7 @@ const roomSchema = mongoose.Schema({
         type: Number,
         required: true
     },
-    del_flag: {
+    del_flg: {
         type: Number,
         required: true
     }

@@ -4,11 +4,6 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 const userSchema = mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        trim: true
-    },
     email: {
         type: String,
         required: true,
@@ -34,36 +29,6 @@ const userSchema = mongoose.Schema({
     role: {
         type: String,
         enum: ['admin', 'operator', 'enduser']
-    },
-    date_of_birth: {
-        type: String
-    },
-    gender: {
-        type: Number,
-        enum: [0, 1]
-    },
-    city: {
-        type: String
-    },
-    district: {
-        type: String
-    },
-    ward: {
-        type: String
-    },
-    img: {
-        type: String
-    },
-    phonenumber: {
-        type: String
-    },
-    ex_key: {
-        type: Number,
-        // require: true
-    },
-    del_flg: {
-        type: Number,
-        // required: true
     }
 })
 

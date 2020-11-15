@@ -9,6 +9,9 @@ const roomSchema = mongoose.Schema({
         required: true,
         trim: true
     },
+    category: {
+        type: Number
+    },
     photo: [{
         name: {
             type: String
@@ -60,10 +63,6 @@ const roomSchema = mongoose.Schema({
         type: String
     },
     ex_key: {
-        type: Number,
-        required: true
-    },
-    del_flg: {
         type: Number,
         required: true
     }

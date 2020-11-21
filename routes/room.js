@@ -1,6 +1,7 @@
 var express = require('express');
 const Room = require('../model/room')
 const User = require('../model/user')
+const Request = require('../model/request')
 var router = express.Router();
 const auth = require('../middleware/auth')
 
@@ -70,7 +71,8 @@ router.get('/user/room', async (req, res) => {
 // create room
 router.post('/room', async (req, res) => {
     try {
-        const { title, category, photo, status, price, area, time_description, toilet, city, district, ward, description, user_id, user_rent } = req.body;
+        console.log(req.body)
+        const { title, category, photo, price, area, time_description, toilet, city, district, ward, description, user_id } = req.body;
         const room = new Room({
             title: title,
             category: category,
@@ -85,7 +87,7 @@ router.post('/room', async (req, res) => {
             ward: ward,
             description: description,
             user_id: user_id,
-            user_rent: user_rent,
+            user_rent: '',
             date_time: formatDate(),
             ex_key: 0
         })
@@ -100,9 +102,10 @@ router.post('/room', async (req, res) => {
 router.put('/room', async (req, res) => {
     try {
         const { title, category, photo, status, price, area, time_description, toilet, city, district, ward, description, user_id, user_rent, ex_key } = req.body
-        const roomExist = Room.findById(req.body.id)
-        const userOwner = User.findById(req.body.user_id)
-        if (((roomExist.user_id !== (await userOwner)._id) && userOwner.role === 'operator') || userOwner.role === 'enduser') throw new Error('User can not role update room.')
+        const roomExist = await Room.findById(req.body.id)
+        const userOwner = await User.findById(req.body.user_id)
+        if (((roomExist.user_id !== (await userOwner)._id) && userOwner.role === 'operator') ||
+                userOwner.role === 'enduser') throw new Error('User can not role update room.')
         roomExist = {
             title: title,
             category: category,
@@ -122,6 +125,17 @@ router.put('/room', async (req, res) => {
             ex_key: ex_key + 1
         }
         await room.save()
+
+        // check list request if room is unavailable
+        if (status === 'UNAVAILABLE') {
+            const findRequest = await Request.find({room_id: (await roomExist)._id, status: 'IN PROGRESS'})
+            if (findRequest) {
+                for (let list in findRequest) {
+                    list.status = 'DENIED'
+                    await list.save()
+                }
+            } 
+        }
         res.status(201).send({ room })
     } catch (error) {
         res.status(400).send(error)

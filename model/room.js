@@ -10,7 +10,7 @@ const roomSchema = mongoose.Schema({
         trim: true
     },
     category: {
-        type: Number
+        type: String
     },
     photo: [{
         name: {

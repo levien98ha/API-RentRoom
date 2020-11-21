@@ -5,7 +5,7 @@ var router = express.Router();
 
 // get category by id 
 router.get('/categori/:id', async (req, res) => {
-    const categoryById = Category.findById(req.params.id)
+    const categoryById = await Category.findById(req.params.id)
     res.status(200).send({ categoryById })
 })
 
@@ -20,7 +20,7 @@ router.get('/category/list', async (req, res) => {
 router.post('/category', async (req, res) => {
     try {
         const { name } = req.body;
-        const category = new Room({
+        const category = new Category({
             name: name,
             ex_key: 0
         })
@@ -34,7 +34,7 @@ router.post('/category', async (req, res) => {
 // create category
 router.put('/category', async (req, res) => {
     try {
-        const categoryExist = Category.findById(req.body.id)
+        const categoryExist = await Category.findById(req.body.id)
         const { name } = req.body;
         categoryExist.name = name
         await categoryExist.save()
@@ -47,7 +47,7 @@ router.put('/category', async (req, res) => {
 // create category
 router.delete('/category', async (req, res) => {
     try {
-        const categoryExist = Category.findByIdAndDelete(req.body.id)
+        const categoryExist = await Category.findByIdAndDelete(req.body.id)
         await categoryExist.save()
         res.status(201).send({ categoryExist })
     } catch (error) {

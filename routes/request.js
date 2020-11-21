@@ -33,7 +33,7 @@ router.post('/request', async (req, res) => {
     // Create a new user
     try {
         const { userOwner, userRent, roomId } = req.body;
-        const checkRoomStatus = Room.findOne({_id: roomId})
+        const checkRoomStatus = (await Room.findOne({_id: roomId})).toObject()
         if (checkRoomStatus.status === 'UNAVAILABLE') throw new Error('Room has rent by another user.')
         const request = new Request({
             user_owner: userOwner,
@@ -53,12 +53,10 @@ router.post('/request', async (req, res) => {
 router.put('/request', async (req, res) => {
     try {
         const { userId, requestId, status, ex_key } = req.body
-        const request = Request.findOne({ _id: requestId }, function (err, result) {
-            if (err) throw err
-        });
+        const request = (await Request.findOne({ _id: requestId })).toObject()
 
         // check status room
-        const checkRoomStatus = Room.findOne({_id: request.roomId})
+        const checkRoomStatus = (await Room.findOne({_id: request.roomId})).toObject()
 
         if (userId !== request.user_owner || userId !== request.user_rent || (userId === request.user_owner && userId === request.user_rent))
             throw new Error('User can not update room. Please contact with administrator.')
@@ -76,7 +74,7 @@ router.put('/request', async (req, res) => {
                 await (await checkRoomStatus).save()
 
                 // change all status request
-                const listRequest = Request.find({room_id: (await checkRoomStatus)._id})
+                const listRequest = await Request.find({room_id: (await checkRoomStatus)._id})
                 for (const list in listRequest) {
                     list.status = 'DENIED'
                     await list.save()

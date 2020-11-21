@@ -21,8 +21,7 @@ const requestSchema = mongoose.Schema({
         enum: ['IN PROGRESS', 'ACCEPT', 'DENIED', 'CANCEL']
     },
     ex_key: {
-        type: Number,
-        required: true
+        type: Number
     }
 })
 

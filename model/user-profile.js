@@ -34,8 +34,7 @@ const profileSchema = mongoose.Schema({
         type: String
     },
     ex_key: {
-        type: Number,
-        // require: true
+        type: Number
     }
 });
 

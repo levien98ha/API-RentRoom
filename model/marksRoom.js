@@ -13,8 +13,7 @@ const marksSchema = mongoose.Schema({
         required: true
     },
     ex_key: {
-        type: Number,
-        required: true
+        type: Number
     }
 })
 

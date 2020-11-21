@@ -17,28 +17,53 @@ router.get('/room/list', async (req, res) => {
     });
 })
 
-// get search 
-router.get('/room/search', async (req, res) => {
-    Room.find({ 
+// get recently room
+router.get('/room/recently', async (req, res) => {
+    try {
+        Room.find({}).limit(6).sort(['date_time', 1]).exec(function(err, result) {
+            res.status(200).send({result})
+        })   
+    } catch (err) {
+        res.status(400).send(error)
+    }
+})
+
+// get same room
+router.get('/room/search/same', async (req, res) => {
+    Room.find({
         category: req.body.category,
-        price: { $gte: req.body.minPrice, $lte: req.body.maxPrice }, 
-        are: { $gte: req.body.minArea, $lte: req.body.maxArea }, 
-        city: { $regex: '.*' + req.body.city + '.*' },
-        district: { $regex: '.*' + req.body.district + '.*' },
-        ward: { $regex: '.*' + req.body.ward + '.*' } }, 
+        user_id: req.body.userId
+    },
         function (err, result) {
             if (err) throw err
-            res.status(200).send({result}); 
+            res.status(200).send({ result });
+        }).limit(2);
+})
+
+// get search 
+router.get('/room/search', async (req, res) => {
+    Room.find({
+        category: req.body.category,
+        price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
+        are: { $gte: req.body.minArea, $lte: req.body.maxArea },
+        city: { $regex: '.*' + req.body.city + '.*' },
+        district: { $regex: '.*' + req.body.district + '.*' },
+        ward: { $regex: '.*' + req.body.ward + '.*' }
+    },
+        function (err, result) {
+            if (err) throw err
+            res.status(200).send({ result });
         });
 })
 
 // get list room by customer id 
 router.get('/user/room', async (req, res) => {
-    Room.find({ 
-        user_id: req.body.user_id}, 
+    Room.find({
+        user_id: req.body.user_id
+    },
         function (err, result) {
             if (err) throw err
-            res.status(200).send({result}); 
+            res.status(200).send({ result });
         });
 })
 
@@ -50,7 +75,7 @@ router.post('/room', async (req, res) => {
             title: title,
             category: category,
             photo: photo,
-            status: status,
+            status: 'AVAILABLE',
             price: price,
             area: area,
             time_description: time_description,
@@ -61,6 +86,7 @@ router.post('/room', async (req, res) => {
             description: description,
             user_id: user_id,
             user_rent: user_rent,
+            date_time: formatDate(),
             ex_key: 0
         })
         await room.save()
@@ -92,7 +118,8 @@ router.put('/room', async (req, res) => {
             description: description,
             user_id: user_id,
             user_rent: user_rent,
-            ex_key: ex_key+1
+            date_time: roomExist.date_time,
+            ex_key: ex_key + 1
         }
         await room.save()
         res.status(201).send({ room })
@@ -100,5 +127,19 @@ router.put('/room', async (req, res) => {
         res.status(400).send(error)
     }
 })
+
+function formatDate() {
+    var d = new Date(),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+
+    return [year, month, day].join('-');
+}
 
 module.exports = router;

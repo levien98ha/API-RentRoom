@@ -1,8 +1,10 @@
 var express = require('express');
 const User = require('../model/user')
+const Room = require('../model/room')
 const Request = require('../model/request')
 var router = express.Router();
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
+const { on } = require('../model/user');
 
 // get list request by user rent 
 router.get('/request/send', async (req, res) => {
@@ -25,12 +27,14 @@ router.get('/request/receive', async (req, res) => {
 // create user for admin
 router.post('/request', async (req, res) => {
 
-    const checkExist = Request.find({user_rent: req.body.userRent, room_id: roomId})
+    const checkExist = Request.find({ user_rent: req.body.userRent, room_id: roomId })
     if (checkExist) throw new Error('Request rent room is exist.')
 
     // Create a new user
     try {
         const { userOwner, userRent, roomId } = req.body;
+        const checkRoomStatus = Room.findOne({_id: roomId})
+        if (checkRoomStatus.status === 'UNAVAILABLE') throw new Error('Room has rent by another user.')
         const request = new Request({
             user_owner: userOwner,
             user_rent: userRent,
@@ -52,6 +56,10 @@ router.put('/request', async (req, res) => {
         const request = Request.findOne({ _id: requestId }, function (err, result) {
             if (err) throw err
         });
+
+        // check status room
+        const checkRoomStatus = Room.findOne({_id: request.roomId})
+
         if (userId !== request.user_owner || userId !== request.user_rent || (userId === request.user_owner && userId === request.user_rent))
             throw new Error('User can not update room. Please contact with administrator.')
 
@@ -63,13 +71,25 @@ router.put('/request', async (req, res) => {
             if (status === 'IN PROGRESS' || status === 'CANCEL') throw new Error('User can not change status room.')
             request.status = status
             ex_key = ex_key + 1
+            if (status === 'ACCEPT') {
+                checkRoomStatus.status = 'UNAVAILABLE'
+                await (await checkRoomStatus).save()
+
+                // change all status request
+                const listRequest = Request.find({room_id: (await checkRoomStatus)._id})
+                for (const list in listRequest) {
+                    list.status = 'DENIED'
+                    await list.save()
+                }
+            }
         } else if (userId === request.user_rent) {
             if (status === 'ACCEPT' || status === 'DENIED') throw new Error('User can not change status room.')
+            if (checkRoomStatus.status === 'UNAVAILABLE') throw new Error('Room has rent by another user.')
             request.status = status
             ex_key = ex_key + 1
         }
         await request.save()
-        res.status(201).send({ user, token })
+        res.status(200).send({ request })
     } catch (error) {
         res.status(400).send(error)
     }

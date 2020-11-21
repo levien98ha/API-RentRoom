@@ -29,7 +29,7 @@ router.post('/mark', async (req, res) => {
 // create mark by userId and roomId
 router.delete('/mark', async (req, res) => {
     try {
-        const markDel = Mark.findOneAndDelete({user_id: req.body.userId, room_id: req.body.roomId})
+        const markDel = Mark.findOneAndDelete({ user_id: req.body.userId, room_id: req.body.roomId })
         await markDel.save()
         res.status(201).send({ markDel })
     } catch (error) {

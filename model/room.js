@@ -62,9 +62,11 @@ const roomSchema = mongoose.Schema({
     user_rent: {
         type: String
     },
+    date_time: {
+        type: String
+    },
     ex_key: {
-        type: Number,
-        required: true
+        type: Number
     }
 })
 

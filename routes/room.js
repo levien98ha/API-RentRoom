@@ -5,6 +5,8 @@ const Request = require('../model/request')
 var router = express.Router();
 const auth = require('../middleware/auth')
 
+var limit = 10;
+
 // get room by id 
 router.get('/room/:id', async (req, res) => {
     const roomById = Room.findById(req.params.id)
@@ -13,13 +15,29 @@ router.get('/room/:id', async (req, res) => {
 
 // get list room 
 router.get('/room/list', async (req, res) => {
-    Room.find({}, function (err, rooms) {
-        res.status(200).send({ rooms: rooms });
-    });
+    Room.find({})
+    .skip((req.body.page - 1) * limit)
+    .limit(limit)
+    .exec((err, doc) => {
+        if (err) {
+          return res.json(err);
+        }
+        Room.countDocuments({}).exec((count_error, count) => {
+          if (err) {
+            return res.json(count_error);
+          }
+          return res.json({
+            total: count,
+            page: req.body.page,
+            pageSize: doc.length,
+            data: doc
+          });
+        })
+    })
 })
 
 // get recently room
-router.get('/room/recently', async (req, res) => {
+router.post('/room/recently', async (req, res) => {
     try {
         Room.find({}).limit(6).sort(['date_time', 1]).exec(function(err, result) {
             res.status(200).send({result})
@@ -30,7 +48,7 @@ router.get('/room/recently', async (req, res) => {
 })
 
 // get same room
-router.get('/room/search/same', async (req, res) => {
+router.post('/room/search/same', async (req, res) => {
     Room.find({
         category: req.body.category,
         user_id: req.body.userId
@@ -42,7 +60,7 @@ router.get('/room/search/same', async (req, res) => {
 })
 
 // get search 
-router.get('/room/search', async (req, res) => {
+router.post('/room/search', async (req, res) => {
     Room.find({
         category: req.body.category,
         price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
@@ -50,22 +68,58 @@ router.get('/room/search', async (req, res) => {
         city: { $regex: '.*' + req.body.city + '.*' },
         district: { $regex: '.*' + req.body.district + '.*' },
         ward: { $regex: '.*' + req.body.ward + '.*' }
-    },
-        function (err, result) {
-            if (err) throw err
-            res.status(200).send({ result });
-        });
+    })
+    .skip((req.body.page - 1) * limit)
+    .limit(limit)
+    .exec((err, doc) => {
+        if (err) {
+          return res.json(err);
+        }
+        Room.countDocuments({
+            category: req.body.category,
+            price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
+            are: { $gte: req.body.minArea, $lte: req.body.maxArea },
+            city: { $regex: '.*' + req.body.city + '.*' },
+            district: { $regex: '.*' + req.body.district + '.*' },
+            ward: { $regex: '.*' + req.body.ward + '.*' }
+        }).exec((count_error, count) => {
+          if (err) {
+            return res.json(count_error);
+          }
+          return res.json({
+            total: count,
+            page: req.body.page,
+            pageSize: doc.length,
+            data: doc
+          });
+        })
+    })
 })
 
 // get list room by customer id 
-router.get('/user/room', async (req, res) => {
+router.post('/user/room', async (req, res) => {
+    console.log(req.body)
     Room.find({
         user_id: req.body.user_id
-    },
-        function (err, result) {
-            if (err) throw err
-            res.status(200).send({ result });
-        });
+    })
+    .skip((req.body.page - 1) * limit)
+    .limit(limit)
+    .exec((err, doc) => {
+        if (err) {
+          return res.json(err);
+        }
+        Room.countDocuments({user_id: req.body.user_id}).exec((count_error, count) => {
+          if (err) {
+            return res.json(count_error);
+          }
+          return res.json({
+            total: count,
+            page: req.body.page,
+            pageSize: doc.length,
+            data: doc
+          });
+        })
+    })
 })
 
 // create room

@@ -5,9 +5,9 @@ var router = express.Router();
 
 
 // get list mark by user id 
-router.get('/invoice/list', async (req, res) => {
-    Marks.find({}, function (err, userId) {
-        res.status(200).send({ user_id: req.params.id });
+router.post('/invoice/list', async (req, res) => {
+    Invoice.find({}, function (err, userId) {
+        res.status(200).send({ user_id: req.body.id });
     });
 })
 

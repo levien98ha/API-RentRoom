@@ -7,21 +7,49 @@ const auth = require('../middleware/auth');
 const { on } = require('../model/user');
 
 // get list request by user rent 
-router.get('/request/send', async (req, res) => {
-    Request.find({ user_rent: req.body.userId },
-        function (err, result) {
-            if (err) throw err
-            res.status(200).send({ result });
+router.post('/request/send', async (req, res) => {
+    Request.find({ user_rent: req.body.userId })
+    .skip((req.body.page - 1) * limit)
+    .limit(limit)
+    .exec((err, doc) => {
+        if (err) {
+          return res.json(err);
+        }
+        Request.countDocuments({ user_owner: req.body.userId }).exec((count_error, count) => {
+          if (err) {
+            return res.json(count_error);
+          }
+          return res.json({
+            total: count,
+            page: req.body.page,
+            pageSize: doc.length,
+            data: doc
+          });
         })
+    })
 })
 
 // get list request by owner 
-router.get('/request/receive', async (req, res) => {
-    Request.find({ user_owner: req.body.userId },
-        function (err, result) {
-            if (err) throw err
-            res.status(200).send({ result });
-        });
+router.post('/request/receive', async (req, res) => {
+    Request.find({ user_owner: req.body.userId })
+    .skip((req.body.page - 1) * limit)
+    .limit(limit)
+    .exec((err, doc) => {
+        if (err) {
+          return res.json(err);
+        }
+        Request.countDocuments({ user_owner: req.body.userId }).exec((count_error, count) => {
+          if (err) {
+            return res.json(count_error);
+          }
+          return res.json({
+            total: count,
+            page: req.body.page,
+            pageSize: doc.length,
+            data: doc
+          });
+        })
+    })
 })
 
 // create user for admin

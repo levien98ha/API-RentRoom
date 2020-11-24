@@ -2,12 +2,29 @@ var express = require('express');
 const Mark = require('../model/marksRoom')
 var router = express.Router();
 
+var limit = 10;
 
 // get list mark by user id 
-router.get('/mark/list', async (req, res) => {
-    Marks.find({}, function (err, userId) {
-        res.status(200).send({ user_id: req.params.id });
-    });
+router.post('/mark/list', async (req, res) => {
+    Mark.find({user_id: req.body.userId})
+    .skip((req.body.page - 1) * limit)
+    .limit(limit)
+    .exec((err, doc) => {
+        if (err) {
+          return res.json(err);
+        }
+        Mark.countDocuments({user_id: req.body.userId}).exec((count_error, count) => {
+          if (err) {
+            return res.json(count_error);
+          }
+          return res.json({
+            total: count,
+            page: req.body.page,
+            pageSize: doc.length,
+            data: doc
+          });
+        })
+    })
 })
 
 // create mark

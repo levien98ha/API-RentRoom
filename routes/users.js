@@ -8,6 +8,8 @@ var nodemailer = require('nodemailer');
 var handlebars = require('handlebars');
 var fs = require('fs');
 
+var limit = 10;
+
 // get user profile 
 router.get('/users/me', auth, async (req, res) => {
   // View logged in user profile
@@ -16,9 +18,22 @@ router.get('/users/me', auth, async (req, res) => {
 
 // get list user 
 router.get('/users/list', async (req, res) => {
-  User.find({}, function (err, users) {
-    res.status(200).send({ users: users });
-  });
+  User.find({}).skip((req.body.page - 1) * limit).limit(limit).exec((err, doc) => {
+    if (err) {
+      return res.json(err);
+    }
+    User.countDocuments({}).exec((count_error, count) => {
+      if (err) {
+        return res.json(count_error);
+      }
+      return res.json({
+        total: count,
+        page: req.body.page,
+        pageSize: doc.length,
+        data: doc
+      });
+    })
+  })
 })
 
 // create user for admin
@@ -128,7 +143,7 @@ router.post('/users/me/login', async (req, res) => {
     const user = await User.findOne({email: req.body.email})
     bcrypt.compare(req.body.password, user.password, function (err, result) {
       if (result === true) {
-        res.send({role: user.role, token: user.tokens[0].token})
+        res.send({role: user.role, token: user.tokens[0].token, userId: user._id})
       } else {
         throw new Error('MSE00074') // 'The "Email" or "Pasword" is incorrect.'
       }

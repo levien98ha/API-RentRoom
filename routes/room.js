@@ -146,6 +146,7 @@ router.post('/room', async (req, res) => {
             ex_key: 0
         })
         await room.save()
+        console.log(room)
         res.status(201).send({ room })
     } catch (error) {
         res.status(400).send(error)
@@ -194,10 +195,15 @@ router.put('/room', async (req, res) => {
 })
 
 // delete room
-router.delete('room/delete', async (req, res) => {
+router.post('/room/delete', async (req, res) => {
     try {
-        Room.findByIdAndDelete(req.body.roomId)
-
+        console.log(req.body)
+        const checkRoom = await Room.findOne({user_id: req.body.user_id})
+        if (!checkRoom) {
+            res.json({Error: 'You cannot delete this room'})
+        }
+        const room = await Room.deleteOne({_id: req.body._id})
+        res.send({data: room})
     } catch (error) {
         res.status(400).send(error)
     }

@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 const profileSchema = mongoose.Schema({
-    useri_id: {
+    user_id: {
         type: String
     },
     name: {

@@ -45,12 +45,10 @@ const roomSchema = mongoose.Schema({
         required: true
     },
     district: {
-        type: String,
-        required: true
+        type: String
     },
     ward: {
-        type: String,
-        required: true
+        type: String
     },
     description: {
         type: String

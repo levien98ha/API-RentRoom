@@ -106,11 +106,11 @@ router.post('/users', async (req, res) => {
   }
 })
 
-// update password
-router.put('/users/:id', auth, async (req, res) => {
+// update user
+router.put('/users', auth, async (req, res) => {
   // Create a new user
   try {
-    const checkExist = await User.findById(req.params.id)
+    const checkExist = await User.findById(req.body.user_id)
     const { email, password } = req.body;
     checkExist.email = email
     checkExist.password = password
@@ -120,6 +120,29 @@ router.put('/users/:id', auth, async (req, res) => {
     res.status(400).send(error)
   }
 })
+
+//update pass
+router.put('/users/password', async (req, res) => {
+  // Create a new user
+  try {
+    const checkExist = await User.findById(req.body.user_id)
+    const { current_pass, password } = req.body;
+
+    bcrypt.compare(checkExist.password, current_pass, async function (err, result) {
+      if (result === true) {
+        checkExist.password = password
+        await checkExist.save()
+        res.status(200).send({user: checkExist})
+      } else {
+        return res.json({error: 'Current password is incorrect.'}) // 'The "Email" or "Pasword" is incorrect.'
+      }
+    })
+    res.status(200).send(checkExist)
+  } catch (error) {
+    res.status(400).send(error)
+  }
+})
+
 
 // log out user 
 router.post('/users/me/logout', auth, async (req, res) => {
@@ -206,15 +229,57 @@ router.post('/users/reset/password', async (req, res) => {
     });
 
     await user.save()
-    res.send({user})
+    res.status(200).send({user})
   } catch (error) {
     res.status(500).send(error)
   }
 })
 
 // get profile user
-
+router.post('/users/profile', async (req, res) => {
+  try {
+    const userInfo = await Profile.findOne({user_id: req.body.user_id})
+    const userMail = await User.findById(req.body.user_id)
+    const user = {
+      _id: userInfo._id,
+      user_id: userInfo.user_id,
+      name: userInfo.name,
+      date_of_birth: userInfo.date_of_birth,
+      gender: userInfo.gender,
+      city: userInfo.city,
+      district: userInfo.district,
+      ward: userInfo.ward,
+      imgUrl: userInfo.imgUrl,
+      phonenumber: userInfo.phonenumber,
+      email: userMail.email
+    }
+    res.status(200).send({user: user})
+  } catch (error) {
+    res.status(500).send(error)
+  }
+})
 
 // put profile user
+router.put('/users/profile', async (req, res) => {
+  try {
+    const userInfo = await Profile.findById({_id: req.body._id})
+    // const userMail = await User.findById(req.body.user_id)
+    const { name, date_of_birth, gender, city, district, ward, imgUrl, phonenumber, email} = req.body;
+    userInfo.name = name
+    userInfo.date_of_birth = date_of_birth
+    userInfo.gender = gender
+    userInfo.city = city
+    userInfo.district = district
+    userInfo.ward = ward
+    userInfo.imgUrl = imgUrl
+    userInfo.phonenumber = phonenumber
+    userInfo.email = email
+    userInfo.ex_key = userInfo.ex_key + 1
+    await userInfo.save()
+    res.status(200).send({user: userInfo})
+  } catch (error) {
+    res.status(500).send(error)
+  }
+})
 
 module.exports = router;

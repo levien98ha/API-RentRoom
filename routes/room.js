@@ -9,7 +9,7 @@ var limit = 10;
 
 // get room by id 
 router.get('/room/:id', async (req, res) => {
-    const roomById = Room.findById(req.params.id)
+    const roomById = await Room.findById(req.params.id)
     res.status(200).send({ roomById })
 })
 
@@ -39,11 +39,10 @@ router.get('/room/list', async (req, res) => {
 // get recently room
 router.post('/room/recently', async (req, res) => {
     try {
-        Room.find({}).limit(6).sort(['date_time', 1]).exec(function (err, result) {
-            res.status(200).send({ result })
-        })
+        const room = await Room.find({}).sort({'date_time': -1}).limit(6)
+        res.status(200).send({ data: room })
     } catch (err) {
-        res.status(400).send(error)
+        res.status(400).send(err)
     }
 })
 
@@ -98,7 +97,6 @@ router.post('/room/search', async (req, res) => {
 
 // get list room by customer id 
 router.post('/user/room', async (req, res) => {
-    console.log(req.body)
     Room.find({
         user_id: req.body.user_id
     })
@@ -125,7 +123,6 @@ router.post('/user/room', async (req, res) => {
 // create room
 router.post('/room', async (req, res) => {
     try {
-        console.log(req.body)
         const { title, category, photo, price, area, time_description, toilet, city, district, ward, description, user_id } = req.body;
         const room = new Room({
             title: title,
@@ -146,7 +143,6 @@ router.post('/room', async (req, res) => {
             ex_key: 0
         })
         await room.save()
-        console.log(room)
         res.status(201).send({ room })
     } catch (error) {
         res.status(400).send(error)
@@ -160,7 +156,7 @@ router.put('/room', async (req, res) => {
         const roomExist = await Room.findById(req.body._id)
         const userOwner = await User.findById(req.body.user_id)
         if (((roomExist.user_id !== (await userOwner)._id) && userOwner.role === 'operator') ||
-            userOwner.role === 'enduser') { throw new Error('User can not role update room.') }
+            userOwner.role === 'user') { throw new Error('User can not role update room.') }
         roomExist.title = title
         roomExist.category = category
         roomExist.photo = photo
@@ -197,7 +193,6 @@ router.put('/room', async (req, res) => {
 // delete room
 router.post('/room/delete', async (req, res) => {
     try {
-        console.log(req.body)
         const checkRoom = await Room.findOne({user_id: req.body.user_id})
         if (!checkRoom) {
             res.json({Error: 'You cannot delete this room'})

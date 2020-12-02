@@ -16,7 +16,7 @@ router.post('/invoice', async (req, res) => {
     try {
         const { userId, userRent, roomId, dateStart, dateEnd, electricBefore, electricLast, waterBefore, waterLast } = req.body;
 
-        if (electricLast < electricBefore || waterLast < waterBefore) throw new Error('Electrical/ Water figures must not be less than last month.')
+        if (electricLast < electricBefore || waterLast < waterBefore) throw Error('Electrical/ Water figures must not be less than last month.')
 
         const invoice = new Invoice({
             user_id: userId,
@@ -35,7 +35,7 @@ router.post('/invoice', async (req, res) => {
         let totalElectric = calcElectricPrice(electricBefore, electricLast)
         let totalWater = calcWaterPrice(waterBefore, waterLast)
         const priceRoom = (await Room.findOne({_id: roomId})).toObject()
-        if (priceRoom.status === 'AVAILABLE') throw new Error('Room status has been change. Please contact with owner.')
+        if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
         invoice.total = totalElectric + totalWater + priceRoom.price
         await invoice.save()
         res.status(201).send({ invoice })

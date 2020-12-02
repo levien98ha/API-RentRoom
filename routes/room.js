@@ -7,11 +7,11 @@ const auth = require('../middleware/auth')
 
 var limit = 10;
 
-// get room by id 
-router.get('/room/:id', async (req, res) => {
-    const roomById = await Room.findById(req.params.id)
-    res.status(200).send({ roomById })
-})
+// // get room by id 
+// router.get('/room/:id', async (req, res) => {
+//     const roomById = await Room.findById(req.params.id)
+//     res.status(200).send({ roomById })
+// })
 
 // get list room 
 router.get('/room/list', async (req, res) => {
@@ -156,7 +156,7 @@ router.put('/room', async (req, res) => {
         const roomExist = await Room.findById(req.body._id)
         const userOwner = await User.findById(req.body.user_id)
         if (((roomExist.user_id !== (await userOwner)._id) && userOwner.role === 'operator') ||
-            userOwner.role === 'user') { throw new Error('User can not role update room.') }
+            userOwner.role === 'user') { throw Error('User can not role update room.') }
         roomExist.title = title
         roomExist.category = category
         roomExist.photo = photo

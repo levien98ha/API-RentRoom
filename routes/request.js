@@ -56,13 +56,13 @@ router.post('/request/receive', async (req, res) => {
 router.post('/request', async (req, res) => {
 
     const checkExist = Request.find({ user_rent: req.body.userRent, room_id: roomId })
-    if (checkExist) throw new Error('Request rent room is exist.')
+    if (checkExist) throw Error('Request rent room is exist.')
 
     // Create a new user
     try {
         const { userOwner, userRent, roomId } = req.body;
         const checkRoomStatus = (await Room.findOne({_id: roomId})).toObject()
-        if (checkRoomStatus.status === 'UNAVAILABLE') throw new Error('Room has rent by another user.')
+        if (checkRoomStatus.status === 'UNAVAILABLE') throw Error('Room has rent by another user.')
         const request = new Request({
             user_owner: userOwner,
             user_rent: userRent,
@@ -87,14 +87,14 @@ router.put('/request', async (req, res) => {
         const checkRoomStatus = (await Room.findOne({_id: request.roomId})).toObject()
 
         if (userId !== request.user_owner || userId !== request.user_rent || (userId === request.user_owner && userId === request.user_rent))
-            throw new Error('User can not update room. Please contact with administrator.')
+            throw Error('User can not update room. Please contact with administrator.')
 
         // check exkey
-        if (ex_key !== request.ex_key) throw new Error('Data has changed. Please reload page to update data.')
+        if (ex_key !== request.ex_key) throw Error('Data has changed. Please reload page to update data.')
 
         // update
         if (userId === request.user_owner) {
-            if (status === 'IN PROGRESS' || status === 'CANCEL') throw new Error('User can not change status room.')
+            if (status === 'IN PROGRESS' || status === 'CANCEL') throw Error('User can not change status room.')
             request.status = status
             ex_key = ex_key + 1
             if (status === 'ACCEPT') {
@@ -109,8 +109,8 @@ router.put('/request', async (req, res) => {
                 }
             }
         } else if (userId === request.user_rent) {
-            if (status === 'ACCEPT' || status === 'DENIED') throw new Error('User can not change status room.')
-            if (checkRoomStatus.status === 'UNAVAILABLE') throw new Error('Room has rent by another user.')
+            if (status === 'ACCEPT' || status === 'DENIED') throw Error('User can not change status room.')
+            if (checkRoomStatus.status === 'UNAVAILABLE') throw Error('Room has rent by another user.')
             request.status = status
             ex_key = ex_key + 1
         }

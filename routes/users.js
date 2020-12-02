@@ -205,7 +205,7 @@ router.post('/users/me/login', async (req, res) => {
       if (result === true) {
         res.send({ role: user.role, token: user.tokens[0].token, userId: user._id })
       } else {
-        throw new Error('MSE00074') // 'The 'Email' or 'Pasword' is incorrect.'
+        throw Error('MSE00074') // 'The 'Email' or 'Pasword' is incorrect.'
       }
     })
   } catch (error) {

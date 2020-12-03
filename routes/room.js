@@ -20,7 +20,7 @@ router.post('/room/id', async (req, res) => {
 })
 
 // get list room 
-router.get('/room/list', async (req, res) => {
+router.post('/room/list', async (req, res) => {
     Room.find({status: 'AVAILABLE' })
         .skip((req.body.page - 1) * limit)
         .limit(limit)
@@ -28,7 +28,7 @@ router.get('/room/list', async (req, res) => {
             if (err) {
                 return res.json(err);
             }
-            Room.countDocuments({}).exec((count_error, count) => {
+            Room.countDocuments({status: 'AVAILABLE' }).exec((count_error, count) => {
                 if (err) {
                     return res.json(count_error);
                 }
@@ -67,9 +67,10 @@ router.post('/room/search/same', async (req, res) => {
 // get search 
 router.post('/room/search', async (req, res) => {
     Room.find({
-        category: req.body.category,
+        status: 'AVAILABLE',
+        category: { $regex: '.*' + req.body.category},
         price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
-        are: { $gte: req.body.minArea, $lte: req.body.maxArea },
+        area: { $gte: req.body.minArea, $lte: req.body.maxArea },
         city: { $regex: '.*' + req.body.city + '.*' },
         district: { $regex: '.*' + req.body.district + '.*' },
         ward: { $regex: '.*' + req.body.ward + '.*' }
@@ -81,9 +82,10 @@ router.post('/room/search', async (req, res) => {
                 return res.json(err);
             }
             Room.countDocuments({
-                category: req.body.category,
+                status: 'AVAILABLE',
+                category: { $regex: '.*' + req.body.category},
                 price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
-                are: { $gte: req.body.minArea, $lte: req.body.maxArea },
+                area: { $gte: req.body.minArea, $lte: req.body.maxArea },
                 city: { $regex: '.*' + req.body.city + '.*' },
                 district: { $regex: '.*' + req.body.district + '.*' },
                 ward: { $regex: '.*' + req.body.ward + '.*' }

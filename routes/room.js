@@ -9,10 +9,6 @@ var limit = 10;
 
 // get room by id 
 router.post('/room/id', async (req, res) => {
-    console.log(req.body._id)
-    // const roomById = await Room.findOne({_id: req.body._id})
-    // console.log(roomById)
-    // if (!roomById) throw Error('MSE00028') 
     Room.find({_id: req.body._id}, function(err, result) {
         if (err) throw err
         res.status(200).send({ data: result })
@@ -54,14 +50,16 @@ router.post('/room/recently', async (req, res) => {
 
 // get same room
 router.post('/room/search/same', async (req, res) => {
-    Room.find({
-        category: req.body.category,
-        user_id: req.body.userId
-    },
-        function (err, result) {
-            if (err) throw err
-            res.status(200).send({ result });
-        }).limit(2);
+    try {
+        const room = await Room.find({
+            _id: {$ne: req.body._id},       
+            category: req.body.category,
+            user_id: req.body.userId})
+            .sort({'date_time': -1}).limit(2)
+        res.status(200).send({ data: room })
+    } catch (err) {
+        res.status(400).send(err)
+    }
 })
 
 // get search 
@@ -75,6 +73,46 @@ router.post('/room/search', async (req, res) => {
         district: { $regex: '.*' + req.body.district + '.*' },
         ward: { $regex: '.*' + req.body.ward + '.*' }
     })
+        .skip((req.body.page - 1) * limit)
+        .limit(limit)
+        .exec((err, doc) => {
+            if (err) {
+                return res.json(err);
+            }
+            Room.countDocuments({
+                status: 'AVAILABLE',
+                category: { $regex: '.*' + req.body.category},
+                price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
+                area: { $gte: req.body.minArea, $lte: req.body.maxArea },
+                city: { $regex: '.*' + req.body.city + '.*' },
+                district: { $regex: '.*' + req.body.district + '.*' },
+                ward: { $regex: '.*' + req.body.ward + '.*' }
+            }).exec((count_error, count) => {
+                if (err) {
+                    return res.json(count_error);
+                }
+                return res.json({
+                    total: count,
+                    page: req.body.page,
+                    pageSize: doc.length,
+                    data: doc
+                });
+            })
+        })
+})
+
+// get search 
+router.post('/room/search/sort', async (req, res) => {
+    Room.find({
+        status: 'AVAILABLE',
+        category: { $regex: '.*' + req.body.category},
+        price: { $gte: req.body.minPrice, $lte: req.body.maxPrice },
+        area: { $gte: req.body.minArea, $lte: req.body.maxArea },
+        city: { $regex: '.*' + req.body.city + '.*' },
+        district: { $regex: '.*' + req.body.district + '.*' },
+        ward: { $regex: '.*' + req.body.ward + '.*' }
+    })
+        .sort({price: req.body.sort})
         .skip((req.body.page - 1) * limit)
         .limit(limit)
         .exec((err, doc) => {

@@ -55,8 +55,8 @@ router.post('/request/receive', async (req, res) => {
 // create user for admin
 router.post('/request', async (req, res) => {
 
-    const checkExist = Request.find({ user_rent: req.body.userRent, room_id: roomId })
-    if (checkExist) throw Error('Request rent room is exist.')
+    const checkExist = Request.find({ user_rent: req.body.userRent, room_id: req.body.roomId })
+    if (!checkExist) throw Error('Request rent room is exist.')
 
     // Create a new user
     try {
@@ -71,7 +71,14 @@ router.post('/request', async (req, res) => {
             ex_key: 0
         })
         await request.save()
-        res.status(201).send({ request })
+
+        const obj = {
+          room_id: roomId
+        }
+        
+        const userUpdate = await User.update({_id: userRent}, { $push: { request: obj} }, {upsert:true})
+        console.log(userUpdate)
+        res.status(201).send({ data: request })
     } catch (error) {
         res.status(400).send(error)
     }

@@ -60,7 +60,8 @@ router.post('/admin/users', async (req, res) => {
       district: district,
       ward: ward,
       imgUrl: imgUrl,
-      phonenumber: phonenumber
+      phonenumber: phonenumber,
+      request: []
     })
 
     await user.save()
@@ -80,8 +81,8 @@ router.post('/admin/users', async (req, res) => {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 's2nlvs2@gmail.com',
-        pass: 'Vien09071998#'
+        user: 'findsafe.org@gmail.com',
+        pass: 'Findsafe.org1'
       }
     });
 
@@ -93,7 +94,7 @@ router.post('/admin/users', async (req, res) => {
       var htmlToSend = template(replacements);
 
       var mailOptions = {
-        from: 's2nlvs2@gmail.com',
+        from: 'findsafe.org@gmail.com',
         to: email,
         subject: 'FindSafe - CREATE ACCOUNT BY ADMINISTRATOR',
         html: htmlToSend
@@ -132,7 +133,8 @@ router.post('/users', async (req, res) => {
       district: '',
       ward: '',
       imgUrl: '',
-      phonenumber: ''
+      phonenumber: '',
+      request: []
     })
 
     await user.save()
@@ -236,8 +238,8 @@ router.post('/users/reset/password', async (req, res) => {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 's2nlvs2@gmail.com',
-        pass: 'Vien09071998#'
+        user: 'findsafe.org@gmail.com',
+        pass: 'Findsafe.org1'
       }
     });
 
@@ -249,7 +251,7 @@ router.post('/users/reset/password', async (req, res) => {
       var htmlToSend = template(replacements);
 
       var mailOptions = {
-        from: 's2nlvs2@gmail.com',
+        from: 'findsafe.org@gmail.com',
         to: user.email,
         subject: 'FindSafe - RESET PASSWORD',
         html: htmlToSend
@@ -332,6 +334,16 @@ router.post('/user/delete', async (req, res) => {
     Request.deleteOne({ user_owner: req.body._id, status: 'ACCEPT' })
     res.send({ data: 'Successfull.' })
   } catch (error) {
+    res.status(400).send(error)
+  }
+})
+
+// get user profile 
+router.post('/users/request', async (req, res) => {
+  try {
+    const checkUser = await User.findOne({_id: req.body._id })
+    res.send({ data: checkUser })
+  } catch(error) {
     res.status(400).send(error)
   }
 })

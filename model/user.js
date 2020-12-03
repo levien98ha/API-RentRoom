@@ -56,7 +56,14 @@ const userSchema = mongoose.Schema({
     },
     phonenumber: {
         type: String
-    }
+    },
+    request: [
+        {
+            room_id: {
+                type: String
+            }
+        }
+    ],
 })
 
 userSchema.pre('save', async function (next) {

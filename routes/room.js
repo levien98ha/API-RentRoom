@@ -7,15 +7,21 @@ const auth = require('../middleware/auth')
 
 var limit = 10;
 
-// // get room by id 
-// router.get('/room/:id', async (req, res) => {
-//     const roomById = await Room.findById(req.params.id)
-//     res.status(200).send({ roomById })
-// })
+// get room by id 
+router.post('/room/id', async (req, res) => {
+    console.log(req.body._id)
+    // const roomById = await Room.findOne({_id: req.body._id})
+    // console.log(roomById)
+    // if (!roomById) throw Error('MSE00028') 
+    Room.find({_id: req.body._id}, function(err, result) {
+        if (err) throw err
+        res.status(200).send({ data: result })
+    })
+})
 
 // get list room 
 router.get('/room/list', async (req, res) => {
-    Room.find({})
+    Room.find({status: 'AVAILABLE' })
         .skip((req.body.page - 1) * limit)
         .limit(limit)
         .exec((err, doc) => {

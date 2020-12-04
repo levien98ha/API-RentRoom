@@ -6,6 +6,8 @@ var router = express.Router();
 const auth = require('../middleware/auth');
 const { on } = require('../model/user');
 
+var limit = 10;
+
 // get list request by user rent 
 router.post('/request/send', async (req, res) => {
     Request.find({ user_rent: req.body.userId })

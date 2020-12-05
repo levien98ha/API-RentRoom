@@ -11,7 +11,7 @@ const requestSchema = mongoose.Schema({
     },
     user_rent: {
         type: String,
-         ref: 'User',
+        ref: 'User',
         required: true
     },
     room_id: {

@@ -17,7 +17,8 @@ router.post('/room/id', async (req, res) => {
 
 // get list room 
 router.post('/room/list', async (req, res) => {
-    Room.find({status: 'AVAILABLE' })
+    Room.find({status: 'AVAILABLE', user_id: req.body.userId })
+        .sort({'date_time': -1})
         .skip((req.body.page - 1) * limit)
         .limit(limit)
         .exec((err, doc) => {
@@ -40,14 +41,18 @@ router.post('/room/list', async (req, res) => {
 
 // get list room owner
 router.post('/room/unvailable', async (req, res) => {
-    Room.find({status: 'UNAVAILABLE', user_id: userId })
+    Room.find({status: 'UNAVAILABLE', user_id: req.body.userId })
+        .populate({
+            path: "user_rent",
+            model: "User"
+        })
         .skip((req.body.page - 1) * limit)
         .limit(limit)
         .exec((err, doc) => {
             if (err) {
                 return res.json(err);
             }
-            Room.countDocuments({status: 'AVAILABLE' }).exec((count_error, count) => {
+            Room.countDocuments({status: 'UNAVAILABLE', user_id: req.body.userId }).exec((count_error, count) => {
                 if (err) {
                     return res.json(count_error);
                 }
@@ -95,7 +100,7 @@ router.post('/room/search', async (req, res) => {
         city: { $regex: '.*' + req.body.city + '.*' },
         district: { $regex: '.*' + req.body.district + '.*' },
         ward: { $regex: '.*' + req.body.ward + '.*' }
-    })
+    }).sort({'date_time': -1})
         .skip((req.body.page - 1) * limit)
         .limit(limit)
         .exec((err, doc) => {

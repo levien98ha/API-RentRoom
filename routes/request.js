@@ -118,7 +118,7 @@ router.put('/request', async (req, res) => {
       if (status === 'IN PROGRESS' || status === 'CANCEL') throw Error('User can not change status room.')
       request.status = status
       if (status === 'ACCEPT') {
-        const updateRoom = await Room.updateOne({_id: request.room_id}, {$set : {status: 'UNAVAILABLE'}});
+        const updateRoom = await Room.updateOne({_id: request.room_id}, {$set : {status: 'UNAVAILABLE', user_rent: request.user_rent}});
         // change all status request
         const listRequest = await Request.updateMany({ room_id: (await checkRoomStatus)._id, _id: {$ne: requestId} }, {$set: {status: 'DENIED'}})
       }

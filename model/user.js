@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-
+const Marks = require('./marksRoom')
 const userSchema = mongoose.Schema({
     email: {
         type: String,
@@ -62,6 +62,11 @@ const userSchema = mongoose.Schema({
             room_id: {
                 type: String
             }
+        }
+    ],
+    mark: [
+        {
+            type: mongoose.Schema.Types.ObjectId, ref: 'Mark'
         }
     ],
 })

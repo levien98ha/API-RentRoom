@@ -4,9 +4,9 @@ const User = require('../model/user')
 var router = express.Router();
 
 // get category by id 
-router.get('/categori/:id', async (req, res) => {
-    const categoryById = await Category.findById(req.params.id)
-    res.status(200).send({ categoryById })
+router.get('/categori/id', async (req, res) => {
+    const categoryById = await Category.findById(req.body.id)
+    res.status(200).send({ data: categoryById })
 })
 
 // get list category 

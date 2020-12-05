@@ -5,12 +5,10 @@ const jwt = require('jsonwebtoken')
 
 const marksSchema = mongoose.Schema({
     user_id: {
-        type: String,
-        required: true
+        type: String, ref: 'User'
     },
     room_id: {
-        type: String,
-        required: true
+        type: String, ref: 'Room'
     },
     ex_key: {
         type: Number

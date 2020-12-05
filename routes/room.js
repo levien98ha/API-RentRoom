@@ -38,6 +38,29 @@ router.post('/room/list', async (req, res) => {
         })
 })
 
+// get list room owner
+router.post('/room/unvailable', async (req, res) => {
+    Room.find({status: 'UNAVAILABLE', user_id: userId })
+        .skip((req.body.page - 1) * limit)
+        .limit(limit)
+        .exec((err, doc) => {
+            if (err) {
+                return res.json(err);
+            }
+            Room.countDocuments({status: 'AVAILABLE' }).exec((count_error, count) => {
+                if (err) {
+                    return res.json(count_error);
+                }
+                return res.json({
+                    total: count,
+                    page: req.body.page,
+                    pageSize: doc.length,
+                    data: doc
+                });
+            })
+        })
+})
+
 // get recently room
 router.post('/room/recently', async (req, res) => {
     try {
@@ -219,7 +242,7 @@ router.put('/room', async (req, res) => {
         roomExist.user_rent = user_rent
         roomExist.date_time = roomExist.date_time
         roomExist.ex_key = ex_key + 1
-        await roomExist.save()
+
         // check list request if room is unavailable
         if (status === 'UNAVAILABLE') {
             const findRequest = await Request.find({ room_id: (await roomExist)._id, status: 'IN PROGRESS' })
@@ -229,7 +252,9 @@ router.put('/room', async (req, res) => {
                     await list.save()
                 }
             }
+            roomExist.user_rent = ""
         }
+        await roomExist.save()
         res.status(201).send(roomExist)
     } catch (error) {
         res.status(400).send(error)

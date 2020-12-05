@@ -61,7 +61,8 @@ router.post('/admin/users', async (req, res) => {
       ward: ward,
       imgUrl: imgUrl,
       phonenumber: phonenumber,
-      request: []
+      request: [],
+      mark: []
     })
 
     await user.save()
@@ -134,7 +135,8 @@ router.post('/users', async (req, res) => {
       ward: '',
       imgUrl: '',
       phonenumber: '',
-      request: []
+      request: [],
+      mark: []
     })
 
     await user.save()
@@ -299,22 +301,20 @@ router.post('/users/profile', async (req, res) => {
 // put profile user
 router.put('/users/profile', async (req, res) => {
   try {
-    const userInfo = await User.findById({ _id: req.body._id })
-    const { name, date_of_birth, gender, city, district, ward, imgUrl, phonenumber, email } = req.body;
-    userInfo.name = name
-    userInfo.date_of_birth = date_of_birth
-    userInfo.gender = gender
-    userInfo.city = city
-    userInfo.district = district
-    userInfo.ward = ward
-    userInfo.imgUrl = imgUrl
-    userInfo.phonenumber = phonenumber
-    userInfo.email = email
-    userInfo.role = req.body.role? req.body.role : userInfo.role
-    userInfo.ex_key = userInfo.ex_key + 1
-    await userInfo.save()
+    // const userInfo = await User.findById({ _id: req.body._id })
+    const { name, date_of_birth, gender, city, district, ward, imgUrl, phonenumber, email, role } = req.body;
+    const userInfo = await User.updateOne({ _id: req.body._id },
+      {
+        $set: {
+          name: name, date_of_birth: date_of_birth,
+          gender: gender, city: city, district: district,
+          ward: ward, imgUrl: imgUrl, phonenumber: phonenumber,
+          email: email, role: role
+        }
+      })
     res.status(200).send({ user: userInfo })
   } catch (error) {
+    console.log(error)
     res.status(500).send(error)
   }
 })
@@ -323,7 +323,7 @@ router.put('/users/profile', async (req, res) => {
 // delete room
 router.post('/user/delete', async (req, res) => {
   try {
-    const checkUser = await User.findOne({_id: req.body._id })
+    const checkUser = await User.findOne({ _id: req.body._id })
     if (!checkUser) {
       res.json({ Error: 'User has been deleted or does not exist.' })
     }
@@ -341,9 +341,9 @@ router.post('/user/delete', async (req, res) => {
 // get user profile 
 router.post('/users/request', async (req, res) => {
   try {
-    const checkUser = await User.findOne({_id: req.body._id })
+    const checkUser = await User.findOne({ _id: req.body._id })
     res.send({ data: checkUser })
-  } catch(error) {
+  } catch (error) {
     res.status(400).send(error)
   }
 })

@@ -1,7 +1,7 @@
 var express = require('express');
 const Mark = require('../model/marksRoom')
 var router = express.Router();
-
+const User = require('../model/user')
 var limit = 10;
 
 // get list mark by user id 
@@ -37,7 +37,13 @@ router.post('/mark', async (req, res) => {
             ex_key: 0
         })
         await mark.save()
-        res.status(201).send({ mark })
+
+        const obj = {
+            room_id: roomId
+        }
+          
+          const userUpdate = await User.update({_id: userId}, { $push: { mark: mark._id} }, {upsert:true})
+        res.status(201).send({data: mark })
     } catch (error) {
         res.status(400).send(error)
     }

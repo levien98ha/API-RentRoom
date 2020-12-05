@@ -3,12 +3,47 @@ const Invoice = require('../model/invoice');
 const Room = require('../model/room');
 var router = express.Router();
 const { createInvoice } = require('../createInvoice/createInvoice.js');
+var fs = require("fs");
 
 // get list mark by user id 
 router.post('/invoice/list', async (req, res) => {
-    Invoice.find({}, function (err, userId) {
-        res.status(200).send({ user_id: req.body.id });
-    });
+    try {
+        const listInvoice = 
+            await Invoice.find({room_id: req.body.roomId})
+                .populate({    
+                    path: "room_id",
+                    model: "Room"})
+                .populate({    
+                    path: "user_rent",
+                    model: "User"})
+                .populate({    
+                    path: "user_id",
+                    model: "User"})
+                .sort({'date_end': -1})
+        res.send({data: listInvoice})
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+// get data invoice by id
+router.post('/invoice/id', async (req, res) => {
+    try {
+        const invoice = 
+            await Invoice.find({_id: req.body._id})
+                .populate({    
+                    path: "room_id",
+                    model: "Room"})
+                .populate({    
+                    path: "user_rent",
+                    model: "User"})
+                .populate({    
+                    path: "user_id",
+                    model: "User"})
+        res.send({data: invoice})
+    } catch (error) {
+        res.status(400).send(error)
+    }
 })
 
 // create invoice
@@ -38,6 +73,7 @@ router.post('/invoice', async (req, res) => {
         const priceRoom = (await Room.findOne({_id: roomId})).toObject()
         if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
         invoice.total = totalElectric + totalWater + priceRoom.price
+        invoice.total = invoice.total.toFixed()
         await invoice.save()
         // createInvoice(invoice, "invoice.pdf");
         res.status(201).send({data: invoice })
@@ -59,6 +95,7 @@ router.put('/invoice', async (req, res) => {
         if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
 
         let total = totalElectric + totalWater + priceRoom.price
+        total = total.toFixed()
 
         const invoiceUpdate = Invoice.update({_id: _id}, {$set: {
             title: title,
@@ -94,7 +131,20 @@ router.post('/invoice/download', async (req, res) => {
             path: "room_id",
             model: "Room"
           })
-        res.send(createInvoice(invoice, "invoice.pdf"));
+        
+        createInvoice(invoice, "invoice.pdf");
+        // const pdf_file = `${__dirname},invoice.pdf`;
+        // res.setHeader('Content-type', 'application/pdf');
+        // console.log(pdf_file)
+        // res.download(pdf_file); 
+
+        var file = fs.createReadStream('./invoice.pdf');
+        var stat = fs.statSync('./invoice.pdf');
+        res.setHeader('Content-Length', stat.size);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
+        file.pipe(res);
+        // res.send("oke");
     } catch (error) {
         res.status(400).send(error)
     }

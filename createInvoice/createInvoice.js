@@ -2,19 +2,9 @@ const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const admin = require('firebase-admin');
 
-admin.initializeApp({
-  apiKey: 'AIzaSyBTYRtlpPqffTWJYpVP8aEvo8N-zd_4sZk',
-  authDomain: 'findsafe-8e352.firebaseapp.com',
-  databaseURL: 'https://findsafe-8e352.firebaseio.com',
-  projectId: 'findsafe-8e352',
-  storageBucket: 'findsafe-8e352.appspot.com',
-  messagingSenderId: '207085702931',
-  appId: '1:207085702931:web:9a98a5bfa4e66d4b9554e6',
-  measurementId: 'G-F7MHPN7CPN'
-});
-
 function createInvoice(invoice, path) {
   let doc = new PDFDocument({ size: "A4", margin: 50 });
+  doc.registerFont('Roboto', 'createInvoice/font/Roboto-Black.ttf')
 
   generateHeader(doc);
   generateCustomerInformation(doc, invoice);
@@ -23,9 +13,6 @@ function createInvoice(invoice, path) {
 
   doc.end();
   doc.pipe(fs.createWriteStream(path));
-
-  const myPdfFile = admin.storage().file('Invoice/test.pdf');
-  const stream = doc.pipe(myPdfFile.createWriteStream());
 
 }
 
@@ -55,21 +42,21 @@ function generateCustomerInformation(doc, invoice) {
   doc
     .fontSize(10)
     .text("Invoice Number:", 50, customerInformationTop)
-    .font("Helvetica-Bold")
+    .font('Roboto')
     .text(invoice.title, 150, customerInformationTop)
-    .font("Helvetica")
+    .font('Roboto')
     .text("Invoice Date:", 50, customerInformationTop + 15)
     .text(invoice.date_start + ' - ' + invoice.date_end, 150, customerInformationTop + 15)
     .text("Balance Due:", 50, customerInformationTop + 30)
     .text(
-      invoice.total,
+      formatMoney(invoice.total),
       150,
       customerInformationTop + 30
     )
 
-    .font("Helvetica-Bold")
+    .font('Roboto')
     .text(invoice.user_rent.name, 300, customerInformationTop)
-    .font("Helvetica")
+    .font('Roboto')
     .text(invoice.user_rent.email, 300, customerInformationTop + 15)
     .text(
       invoice.user_rent.ward +
@@ -80,6 +67,7 @@ function generateCustomerInformation(doc, invoice) {
       300,
       customerInformationTop + 30
     )
+    .font('Roboto')
     .moveDown();
   generateHr(doc, 252);
 }
@@ -88,17 +76,18 @@ function generateInvoiceTable(doc, invoice) {
   let position;
   const invoiceTableTop = 330;
 
-  doc.font("Helvetica-Bold");
+  doc.font('Roboto');
   generateTableRow(
     doc,
     invoiceTableTop,
-    "ID",
+    "Name",
     "Number before",
     "Number after",
+    'Quantity',
     "Line Total"
   );
   generateHr(doc, invoiceTableTop + 20);
-  doc.font("Helvetica");
+  doc.font('Roboto');
 
   position = invoiceTableTop + 1 * 30;
   generateTableRow(
@@ -107,7 +96,8 @@ function generateInvoiceTable(doc, invoice) {
     'Water',
     invoice.water_before,
     invoice.water_last,
-    calcWaterPrice(invoice.water_before, invoice.water_last)
+    invoice.water_last - invoice.water_before,
+    formatMoney(calcWaterPrice(invoice.water_before, invoice.water_last))
   );
   generateHr(doc, position + 20);
 
@@ -118,7 +108,8 @@ function generateInvoiceTable(doc, invoice) {
     'Electric',
     invoice.electric_before,
     invoice.electric_last,
-    calcElectricPrice(invoice.electric_before, invoice.electric_last)
+    invoice.electric_last - invoice.electric_before,
+    formatMoney(calcElectricPrice(invoice.electric_before, invoice.electric_last))
   );
   generateHr(doc, position + 20);
 
@@ -129,7 +120,8 @@ function generateInvoiceTable(doc, invoice) {
     'Price room',
     '',
     '',
-    invoice.room_id.price
+    1,
+    formatMoney(invoice.room_id.price)
   );
 
   generateHr(doc, position + 20);
@@ -141,8 +133,8 @@ function generateInvoiceTable(doc, invoice) {
     "",
     "",
     "Subtotal",
-    "",
-    invoice.total
+    '',
+    formatMoney(invoice.total)
   );
 }
 
@@ -169,7 +161,7 @@ function generateTableRow(
   doc
     .fontSize(10)
     .text(item, 50, y)
-    .text(description, 150, y)
+    .text(description, 150, y, { width: 90, align: "right" })
     .text(unitCost, 280, y, { width: 90, align: "right" })
     .text(quantity, 370, y, { width: 90, align: "right" })
     .text(lineTotal, 0, y, { align: "right" });
@@ -235,10 +227,23 @@ function calcWaterPrice(number1, number2) {
     return total
 }
 
-function formatCurrency(value) {
-    return value && this.roundUp(value, 2).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
-}
 
 module.exports = {
   createInvoice
+};
+
+function formatMoney(amount, decimalCount = 0, decimal = ".", thousands = ",") {
+  try {
+    decimalCount = Math.abs(decimalCount);
+    decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
+
+    const negativeSign = amount < 0 ? "-" : "";
+
+    let i = parseInt(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount)).toString();
+    let j = (i.length > 3) ? i.length % 3 : 0;
+
+    return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "");
+  } catch (e) {
+    console.log(e)
+  }
 };

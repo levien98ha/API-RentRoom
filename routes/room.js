@@ -41,7 +41,7 @@ router.post('/room/list', async (req, res) => {
 
 // get list room owner
 router.post('/room/unvailable', async (req, res) => {
-    Room.find({status: 'UNAVAILABLE', user_id: req.body.userId })
+    Room.find({status: 'UNAVAILABLE', user_id: req.body.user_id })
         .populate({
             path: "user_rent",
             model: "User"

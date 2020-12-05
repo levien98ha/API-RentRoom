@@ -55,10 +55,12 @@ const roomSchema = mongoose.Schema({
     },
     user_id: {
         type: String,
-        required: true
+        required: true,
+        ref: 'User'
     },
     user_rent: {
-        type: String
+        type: String,
+        ref: 'User'
     },
     date_time: {
         type: String

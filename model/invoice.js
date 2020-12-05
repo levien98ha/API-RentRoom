@@ -4,17 +4,23 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 const invoiceSchema = mongoose.Schema({
+    title: {
+        type: String
+    },
     user_id: {
         type: String,
-        required: true
+        required: true,
+        ref: 'User'
     },
     user_rent: {
         type: String,
-        required: true
+        required: true,
+        ref: 'User'
     },
     room_id: {
         type: String,
-        required: true
+        required: true,
+        ref: 'Room'
     },
     date_start: {
         type: String
@@ -35,9 +41,6 @@ const invoiceSchema = mongoose.Schema({
         type: Number
     },
     total: {
-        type: Number
-    }, 
-    ex_key: {
         type: Number
     }
 })

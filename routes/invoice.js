@@ -2,7 +2,7 @@ var express = require('express');
 const Invoice = require('../model/invoice');
 const Room = require('../model/room');
 var router = express.Router();
-
+const { createInvoice } = require('../createInvoice/createInvoice.js');
 
 // get list mark by user id 
 router.post('/invoice/list', async (req, res) => {
@@ -14,11 +14,12 @@ router.post('/invoice/list', async (req, res) => {
 // create invoice
 router.post('/invoice', async (req, res) => {
     try {
-        const { userId, userRent, roomId, dateStart, dateEnd, electricBefore, electricLast, waterBefore, waterLast } = req.body;
+        const { title, userId, userRent, roomId, dateStart, dateEnd, electricBefore, electricLast, waterBefore, waterLast } = req.body;
 
         if (electricLast < electricBefore || waterLast < waterBefore) throw Error('Electrical/ Water figures must not be less than last month.')
 
         const invoice = new Invoice({
+            title: title,
             user_id: userId,
             user_rent: userRent,
             room_id: roomId,
@@ -38,7 +39,62 @@ router.post('/invoice', async (req, res) => {
         if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
         invoice.total = totalElectric + totalWater + priceRoom.price
         await invoice.save()
-        res.status(201).send({ invoice })
+        // createInvoice(invoice, "invoice.pdf");
+        res.status(201).send({data: invoice })
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+router.put('/invoice', async (req, res) => {
+    try {
+        const { _id, title, userId, userRent, roomId, dateStart, dateEnd, electricBefore, electricLast, waterBefore, waterLast } = req.body;
+
+        if (electricLast < electricBefore || waterLast < waterBefore) throw Error('Electrical/ Water figures must not be less than last month.')
+
+        let totalElectric = calcElectricPrice(electricBefore, electricLast)
+        let totalWater = calcWaterPrice(waterBefore, waterLast)
+
+        const priceRoom = (await Room.findOne({_id: roomId})).toObject()
+        if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
+
+        let total = totalElectric + totalWater + priceRoom.price
+
+        const invoiceUpdate = Invoice.update({_id: _id}, {$set: {
+            title: title,
+            user_id: userId,
+            user_rent: userRent,
+            room_id: roomId,
+            date_start: dateStart,
+            date_end: dateEnd,
+            electric_before: electricBefore,
+            electric_last: electricLast,
+            water_before: waterBefore,
+            water_last: waterLast,
+            total: total
+        }})
+
+        res.status(200).send({data: invoiceUpdate })
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+router.post('/invoice/download', async (req, res) => {
+    try {
+        const invoice = await Invoice.findOne({_id: req.body._id}).populate({
+            path: "user_rent",
+            model: "User"
+          })
+          .populate({
+            path: "user_id",
+            model: "User"
+          })
+          .populate({
+            path: "room_id",
+            model: "Room"
+          })
+        res.send(createInvoice(invoice, "invoice.pdf"));
     } catch (error) {
         res.status(400).send(error)
     }
@@ -50,19 +106,19 @@ function calcElectricPrice(number1, number2) {
     if (el <= 50) {
         total = el * 1678
     } 
-    if (50 < el <= 100) {
+    else if (50 < el <= 100) {
         total = 50 * 1678 + (el - 50) * 1734
     } 
-    if (100 < el <= 200) {
+    else if (100 < el <= 200) {
         total = 50 * 1678 + 50 * 1734 + (el - 100) * 2014
     } 
-    if (200 < el <= 300) {
+    else if (200 < el <= 300) {
         total = 50 * 1678 + 50 * 1734 + 100 * 2014 + (el - 200) * 2536
     } 
-    if (300 < el <= 400) {
+    else if (300 < el <= 400) {
         total = 50 * 1678 + 50 * 1734 + 100 * 2014 + 100 * 2536 + (el - 300) * 2834
     } 
-    if (400 < el) {
+    else if (400 < el) {
         total = 50 * 1678 + 50 * 1734 + 100 * 2014 + 100 * 2536 + 100 * 2834 + (el - 400) * 2927
     }
     total += total * 10 / 100

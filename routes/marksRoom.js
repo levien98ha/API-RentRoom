@@ -2,11 +2,16 @@ var express = require('express');
 const Mark = require('../model/marksRoom')
 var router = express.Router();
 const User = require('../model/user')
+
 var limit = 10;
 
 // get list mark by user id 
 router.post('/mark/list', async (req, res) => {
     Mark.find({user_id: req.body.userId})
+    .populate({
+      path: 'room_id',
+      model: 'Room'
+    })
     .skip((req.body.page - 1) * limit)
     .limit(limit)
     .exec((err, doc) => {

@@ -147,6 +147,37 @@ router.post('/users', async (req, res) => {
   }
 })
 
+// register operator
+router.post('/users/operator', async (req, res) => {
+  // Create a new user
+  try {
+    const { email, password } = req.body;
+    const checkEmail = await User.findOne({ email: email })
+    if (checkEmail) res.send({ error: 'MSE00029' }) //MSE00029 = 'The email address is already exists.';
+    const user = new User({
+      email: email,
+      password: password,
+      role: 'operator',
+      name: '',
+      date_of_birth: '',
+      gender: '',
+      city: '',
+      district: '',
+      ward: '',
+      imgUrl: '',
+      phonenumber: '',
+      request: [],
+      mark: []
+    })
+
+    await user.save()
+    const token = await user.generateAuthToken()
+    res.status(201).send({ user, token })
+  } catch (error) {
+    res.status(400).send(error)
+  }
+})
+
 // update user
 router.put('/users', auth, async (req, res) => {
   // Create a new user

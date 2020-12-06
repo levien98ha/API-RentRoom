@@ -341,7 +341,7 @@ router.post('/user/delete', async (req, res) => {
 // get user profile 
 router.post('/users/request', async (req, res) => {
   try {
-    const checkUser = await User.findOne({ _id: req.body._id })
+    const checkUser = await User.findOne({ _id: req.body._id }).populate({path: 'request.room_id', model: 'Room'})
     res.send({ data: checkUser })
   } catch (error) {
     res.status(400).send(error)

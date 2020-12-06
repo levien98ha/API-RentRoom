@@ -27,6 +27,16 @@ router.post('/mark/list', async (req, res) => {
     })
 })
 
+// get list mark by user id 
+router.post('/mark/list/all', async (req, res) => {
+  try {
+    const list = await Mark.find({user_id: req.body.userId})
+    res.status(200).send({data: list})
+  } catch (error) {
+    res.status(400).send(error)
+  }
+})
+
 // create mark
 router.post('/mark', async (req, res) => {
     try {
@@ -42,7 +52,7 @@ router.post('/mark', async (req, res) => {
             room_id: roomId
         }
           
-          const userUpdate = await User.update({_id: userId}, { $push: { mark: mark._id} }, {upsert:true})
+        const userUpdate = await User.update({_id: userId}, { $push: { mark: obj} }, {upsert:true})
         res.status(201).send({data: mark })
     } catch (error) {
         res.status(400).send(error)
@@ -50,11 +60,11 @@ router.post('/mark', async (req, res) => {
 })
 
 // create mark by userId and roomId
-router.delete('/mark', async (req, res) => {
+router.post('/mark/del', async (req, res) => {
     try {
-        const markDel = await Mark.findOneAndDelete({ user_id: req.body.userId, room_id: req.body.roomId })
-        await markDel.save()
-        res.status(201).send({ markDel })
+      const mark = await Mark.findOneAndDelete({ user_id: req.body.userId, room_id: req.body.roomId })
+      const user = await User.findOneAndUpdate({_id: req.body.userId}, {$pull : {mark: {room_id: req.body.roomId}}})
+        res.status(201).send({data: mark})
     } catch (error) {
         res.status(400).send(error)
     }

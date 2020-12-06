@@ -84,35 +84,40 @@ router.post('/invoice', async (req, res) => {
 
 router.put('/invoice', async (req, res) => {
     try {
-        const { _id, title, userId, userRent, roomId, dateStart, dateEnd, electricBefore, electricLast, waterBefore, waterLast } = req.body;
+        const { _id, title, user_id, user_rent, room_id, date_start, date_end, electric_before, electric_last, water_before, water_last } = req.body;
 
-        if (electricLast < electricBefore || waterLast < waterBefore) throw Error('Electrical/ Water figures must not be less than last month.')
+        if (electric_last < electric_before || water_last < water_before) throw Error('Electrical/ Water figures must not be less than last month.')
 
-        let totalElectric = calcElectricPrice(electricBefore, electricLast)
-        let totalWater = calcWaterPrice(waterBefore, waterLast)
+        let totalElectric = calcElectricPrice(electric_before, electric_last).toFixed()
+        let totalWater = calcWaterPrice(water_before, water_last).toFixed()
 
-        const priceRoom = (await Room.findOne({_id: roomId})).toObject()
+        const priceRoom = (await Room.findOne({_id: room_id._id})).toObject()
         if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
-
-        let total = totalElectric + totalWater + priceRoom.price
+        
+        let total = Number(totalElectric) + Number(totalWater) + Number(priceRoom.price)
         total = total.toFixed()
 
-        const invoiceUpdate = Invoice.update({_id: _id}, {$set: {
+        const userId = user_id._id
+        const userRent = user_rent._id
+        const roomId = room_id._id
+
+        const invocie =  await Invoice.update({_id: _id}, {$set: {
             title: title,
-            user_id: userId,
-            user_rent: userRent,
-            room_id: roomId,
-            date_start: dateStart,
-            date_end: dateEnd,
-            electric_before: electricBefore,
-            electric_last: electricLast,
-            water_before: waterBefore,
-            water_last: waterLast,
+            user_id: user_id._id,
+            user_rent: user_rent._id,
+            room_id: room_id._id,
+            date_start: date_start,
+            date_end: date_end,
+            electric_before: electric_before,
+            electric_last: electric_last,
+            water_before: water_before,
+            water_last: water_last,
             total: total
         }})
-
-        res.status(200).send({data: invoiceUpdate })
+         console.log(invocie._id)
+        res.status(200).send({data: 'succefull'})
     } catch (error) {
+        console.log(error)
         res.status(400).send(error)
     }
 })

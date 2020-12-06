@@ -137,9 +137,8 @@ router.put('/request', async (req, res) => {
 // get user profile 
 router.post('/request/user', async (req, res) => {
   try {
-    console.log(req)
     const checkUser = await Request.find({ room_id: req.body._id, user_rent: req.body.userId, status: 'IN PROGRESS' })
-    res.send({ data: checkUser })
+    res.json({_id: checkUser._id})
   } catch (error) {
     res.status(400).send(error)
   }

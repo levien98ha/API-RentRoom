@@ -60,13 +60,17 @@ const userSchema = mongoose.Schema({
     request: [
         {
             room_id: {
-                type: String
+                type: String,
+                ref: 'Room'
             }
         }
     ],
     mark: [
         {
-            type: mongoose.Schema.Types.ObjectId, ref: 'Mark'
+            room_id: {
+                type: String,
+                ref: 'Mark'
+            }
         }
     ],
 })

@@ -5,7 +5,7 @@ var router = express.Router();
 const { createInvoice } = require('../createInvoice/createInvoice.js');
 var fs = require("fs");
 
-// get list mark by user id 
+// get list invoice by user id 
 router.post('/invoice/list', async (req, res) => {
     try {
         const listInvoice = 
@@ -49,34 +49,44 @@ router.post('/invoice/id', async (req, res) => {
 // create invoice
 router.post('/invoice', async (req, res) => {
     try {
-        const { title, userId, userRent, roomId, dateStart, dateEnd, electricBefore, electricLast, waterBefore, waterLast } = req.body;
-
-        if (electricLast < electricBefore || waterLast < waterBefore) throw Error('Electrical/ Water figures must not be less than last month.')
+        const { title, user_id, user_rent, room_id, date_start, date_end, electric_before, electric_last, water_before, water_last } = req.body;
+        if (electric_last < electric_before || water_last < water_before) throw Error('Electrical/ Water figures must not be less than last month.')
 
         const invoice = new Invoice({
             title: title,
-            user_id: userId,
-            user_rent: userRent,
-            room_id: roomId,
-            date_start: dateStart,
-            date_end: dateEnd,
-            electric_before: electricBefore,
-            electric_last: electricLast,
-            water_before: waterBefore,
-            water_last: waterLast,
+            user_id: user_id,
+            user_rent: user_rent,
+            room_id: room_id,
+            date_start: date_start,
+            date_end: date_end,
+            electric_before: electric_before,
+            electric_last: electric_last,
+            water_before: water_before,
+            water_last: water_last,
             total: 0,
             ex_key: 0
         })
 
-        let totalElectric = calcElectricPrice(electricBefore, electricLast)
-        let totalWater = calcWaterPrice(waterBefore, waterLast)
-        const priceRoom = (await Room.findOne({_id: roomId})).toObject()
+        let totalElectric = calcElectricPrice(electric_before, electric_last).toFixed()
+        let totalWater = calcWaterPrice(water_before, water_last).toFixed()
+        const priceRoom = (await Room.findOne({_id: room_id})).toObject()
         if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
-        invoice.total = totalElectric + totalWater + priceRoom.price
+        invoice.total = Number(totalElectric) + Number(totalWater) + Number(priceRoom.price)
         invoice.total = invoice.total.toFixed()
         await invoice.save()
-        // createInvoice(invoice, "invoice.pdf");
-        res.status(201).send({data: invoice })
+
+        const invoiceSend = 
+            await Invoice.find({_id: invoice._id})
+                .populate({    
+                    path: "room_id",
+                    model: "Room"})
+                .populate({    
+                    path: "user_rent",
+                    model: "User"})
+                .populate({    
+                    path: "user_id",
+                    model: "User"})
+        res.status(200).send({data: invoiceSend })
     } catch (error) {
         res.status(400).send(error)
     }
@@ -91,7 +101,7 @@ router.put('/invoice', async (req, res) => {
         let totalElectric = calcElectricPrice(electric_before, electric_last).toFixed()
         let totalWater = calcWaterPrice(water_before, water_last).toFixed()
 
-        const priceRoom = (await Room.findOne({_id: room_id._id})).toObject()
+        const priceRoom = await Room.findOne({_id: room_id._id})
         if (priceRoom.status === 'AVAILABLE') throw Error('Room status has been change. Please contact with owner.')
         
         let total = Number(totalElectric) + Number(totalWater) + Number(priceRoom.price)
@@ -114,7 +124,6 @@ router.put('/invoice', async (req, res) => {
             water_last: water_last,
             total: total
         }})
-         console.log(invocie._id)
         res.status(200).send({data: 'succefull'})
     } catch (error) {
         console.log(error)

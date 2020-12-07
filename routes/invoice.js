@@ -147,10 +147,6 @@ router.post('/invoice/download', async (req, res) => {
           })
         
         createInvoice(invoice, "invoice.pdf");
-        // const pdf_file = `${__dirname},invoice.pdf`;
-        // res.setHeader('Content-type', 'application/pdf');
-        // console.log(pdf_file)
-        // res.download(pdf_file); 
 
         var file = fs.createReadStream('./invoice.pdf');
         var stat = fs.statSync('./invoice.pdf');
@@ -159,6 +155,17 @@ router.post('/invoice/download', async (req, res) => {
         res.setHeader('Content-Disposition', 'attachment; filename=invoice.pdf');
         file.pipe(res);
         // res.send("oke");
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+router.post('/invoice/delete', async (req, res) => {
+    try {
+        console.log(req.body)
+        const invoice = await Invoice.findOneAndDelete({_id: req.body._id})
+        res.status(200).send({data: invoice})
+
     } catch (error) {
         res.status(400).send(error)
     }

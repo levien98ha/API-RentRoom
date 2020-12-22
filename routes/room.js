@@ -252,10 +252,7 @@ router.put('/room', async (req, res) => {
         if (status === 'UNAVAILABLE') {
             const findRequest = await Request.find({ room_id: (await roomExist)._id, status: 'IN PROGRESS' })
             if (findRequest) {
-                for (let list in findRequest) {
-                    list.status = 'DENIED'
-                    await list.save()
-                }
+                const changeStatus = await Request.updateMany({room_id: req.body._id}, {$set: {status: 'DENIED'}});
             }
             roomExist.user_rent = ""
         }

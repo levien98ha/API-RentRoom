@@ -200,15 +200,14 @@ router.put('/users/password', async (req, res) => {
     const checkExist = await User.findById(req.body.user_id)
     const { current_pass, password } = req.body;
 
-    bcrypt.compare(checkExist.password, current_pass, async function (err, result) {
-      if (result === true) {
-        checkExist.password = password
-        await checkExist.save()
-        res.status(200).send({ user: checkExist })
-      } else {
-        return res.json({ error: 'Current password is incorrect.' }) // 'The 'Email' or 'Pasword' is incorrect.'
-      }
-    })
+    const result = await bcrypt.compare(checkExist.password, current_pass);
+    if (result === true) {
+      checkExist.password = password
+      await checkExist.save()
+      res.status(200).send({ user: checkExist })
+    } else {
+      return res.json({ error: 'Current password is incorrect.' }) // 'The 'Email' or 'Pasword' is incorrect.'
+    }
     res.status(200).send(checkExist)
   } catch (error) {
     res.status(400).send(error)
@@ -236,13 +235,12 @@ router.post('/users/me/login', async (req, res) => {
   // Log user out of the application
   try {
     const user = await User.findOne({ email: req.body.email })
-    bcrypt.compare(req.body.password, user.password, function (err, result) {
-      if (result === true) {
+    const result = bcrypt.compare(req.body.password, user.password)
+      if (result) {
         res.send({ role: user.role, token: user.tokens[0].token, userId: user._id })
       } else {
         throw Error('MSE00074') // 'The 'Email' or 'Pasword' is incorrect.'
       }
-    })
   } catch (error) {
     res.status(500).send(error)
   }
